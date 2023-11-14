@@ -28,4 +28,4 @@ def gopt_score(voice, text):
     ret = print_form(utter, w_acc, w_st, w_total, phn, list_len_phn, text)
     return ret
 
-gopt_score("/data/master/yangming3/gopt/lttc_dir/112020303011/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())
+gopt_score("../eval_example/test/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())

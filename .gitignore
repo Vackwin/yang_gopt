@@ -5,7 +5,9 @@ data/wav
 src/__pycache__
 src/models/__pycache__
 src/speechocean762
-lttc_dir
+wav_dir/*
+wav_dir/test/112020303011_100.wav
+!wav_dir/test/
 kaldi/.github
 kaldi/docker
 data_release/*

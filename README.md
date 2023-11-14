@@ -1,5 +1,4 @@
 # GOPT: Transformer-Based Multi-Aspect Multi-Granularity Non-Native English Speaker Pronunciation Assessment
- - [News](#News)
  - [Introduction](#Introduction)
  - [Citing](#Citing)  
  - [Data](#Data)
@@ -8,9 +7,6 @@
  - [Test Your Own Model with Our Speechocean762 Traning Pipeline](#Test-Your-Own-Model-with-Our-Speechocean762-Traning-Pipeline)
  - [Contact](#Contact)
 
-## News
-
-January 2023, [YIFAN WANG](https://github.com/LyWangPX) contributed a step-by-step tutorial on how to do inference with your own data, see [[Here]](https://github.com/YuanGongND/gopt/blob/master/steps_of_inference.md). However, a [bug](https://github.com/YuanGongND/gopt/issues/15) has been reported and needs to be addressed before use.
 
 ## Introduction  
 
