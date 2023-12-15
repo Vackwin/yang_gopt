@@ -19,13 +19,18 @@ def print_form(utter, w_acc, w_st, w_total, phn, list_len_phn, text):
 def gopt_score(voice, text):
     play.reflush()
     check, list_len_phn = play.prepare_gop(voice, text)
+    print("prepare gop ok")
+    print(check, list_len_phn)
     if check != "OK":
+        print(check, list_len_phn)
         return "bugs"
     utter, w_acc, w_st, w_total, phn = play.run_gopt(list_len_phn)
+    print("run gopt ok")
     if utter == 0:
         print("infer error!")
         return "error"
     ret = print_form(utter, w_acc, w_st, w_total, phn, list_len_phn, text)
     return ret
 
-gopt_score("../eval_example/test/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())
+# gopt_score("../eval_example/test/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())
+gopt_score("../wav_dir/test/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())

@@ -99,5 +99,8 @@ te_label = load_label('../../data/raw_kaldi_gop/mydataset/gopt_feats/te_labels_p
 te_feat, te_label = process_feat_seq(te_feat, te_keys, te_label, phn_dict)
 # print(te_feat.shape)
 # print(te_label.shape)
+import os
+if not os.path.isdir("../../data/seq_data_mydataset"):
+    os.mkdir("../../data/seq_data_mydataset")
 np.save('../../data/seq_data_mydataset/te_feat.npy', te_feat)
 np.save('../../data/seq_data_mydataset/te_label_phn.npy', te_label)

@@ -51,14 +51,14 @@ def main(args, set):
         cnt += 1
         if key not in score_of:
             print(f'Warning: no human score for {key}')
-            continue
+            # continue
         ph = int(feat[0])
         if ph in range(args.min_phone_idx, args.max_phone_idx + 1):
             if phone_int2sym is not None and ph in phone_int2sym:
                 ph = phone_int2sym[ph]
             keys.append(key)
             features.append(feat)
-            lables.append([ph, score_of[key]])
+            lables.append([ph])
 
     print('now processing {:s} set with floor {:f}, load {:d} samples'.format(set, args.floor, cnt))
 

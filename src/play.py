@@ -19,6 +19,9 @@ def clear_file_content(file_path):
 def cp_file(src_file, dst_file = "output.txt"):
     # 构建Shell命令
     command = ["cp", "-r", src_file, dst_file]
+    dst_dir = os.path.dirname(dst_file)
+    if not os.path.exists(dst_dir):
+        os.makedirs(dst_dir)
     # 执行Shell命令
     try:
         subprocess.run(command, check=True)
@@ -31,9 +34,10 @@ def del_file(file_path):
     # 构建Shell命令
     command = ["rm", "-rf" , file_path]
     # 执行Shell命令
+    print("in del_file")
     try:
         subprocess.run(command, check=True)
-        # print(f" {file_path} deleted successfully.")
+        print(f" {file_path} deleted successfully.")
     except subprocess.CalledProcessError:
         print(f"Error executing {file_path}.")
         pass
@@ -138,13 +142,15 @@ def find_phone(word):
         return pronunciation, len
     elif word in lexicon2:
         pronunciation = lexicon2[word]
+        print("word in lexicon2")
+        print(word,":", pronunciation)
         write_new_lexicon(word, pronunciation)
         pronunciation, len = process_phone(pronunciation)
         return pronunciation, len
     else:
         return "error", 0
 
-def write_new_lexicon(new_key, new_value, dst_path = '../kaldi/egs/gop_speechocean762/s5/data/speechocean762/resource/lexicon.txt'):
+def write_new_lexicon(new_key, new_value, dst_path = 'lexicon.txt'):
     existing_data = {}
     with open(dst_path, 'r') as file:
         for line in file:
@@ -226,12 +232,17 @@ def run_gopt(list_len_phn):
         bar()  # 顯示進度
         ret = run_script("../kaldi/egs/gop_speechocean762/s5/", "run.sh")
         if ret != 0:
+            print("run.sh error")
             return 0, 0, 0, 0, 0
         bar()  # 顯示進度
+        os.environ['KALDI_ROOT']='/home/yu_hsiu/kaldi'
         run_python("../kaldi/egs/gop_speechocean762/s5/", "local/extract_gop_feats.py")
+        print("extract gop ok")
         cp_file("../kaldi/egs/gop_speechocean762/s5/gopt_feats/", "../data/raw_kaldi_gop/mydataset/")
+        print("cp ok")
         bar()  # 顯示進度
         run_python("prep_data/", "gen_seq_data_phn_demo.py")
+        print("gen seq data ok")
         bar()  # 顯示進度
         ret = eval_score.gopt_score(list_len_phn)
         return ret
@@ -245,6 +256,11 @@ def prepare_gop(audio, text):
     test_file = ["test/spk2utt", "test/text", "test/utt2spk", "test/wav.scp"]
     wave_file = f"WAVE/SPEAKER{spk}/{voice_name}.wav"
     SAMPLE_RATE = 16000
+
+    if not os.path.isdir(os.path.dirname(socean_dst_path+wave_file)):
+        os.makedirs(os.path.dirname(socean_dst_path+wave_file))
+    if not os.path.isdir(os.path.dirname(socean_dst_path+test_file[0])):
+        os.makedirs(os.path.dirname(socean_dst_path+test_file[0]))
 
     resampleAndSave(audio, SAMPLE_RATE, socean_dst_path+wave_file)
     write_text(socean_dst_path+test_file[0], f"{spk} {voice_name}\n")             # spk2utt
@@ -273,8 +289,10 @@ def reflush():
 
     del_file(socean_dst_path+wave_file)
     del_file("../kaldi/egs/gop_speechocean762/s5/data/test")
-    del_file("../kaldi/egs/gop_speechocean762/s5/data/local")
-    del_file("../kaldi/egs/gop_speechocean762/s5/data/lang_nosp")
+    # del_file("../kaldi/egs/gop_speechocean762/s5/data/local")
+    # del_file("../kaldi/egs/gop_speechocean762/s5/data/lang_nosp")
+    del_file(socean_dst_path+"test/spk2age")
+    del_file(socean_dst_path+"test/spk2gender")
     clear_file_content(socean_dst_path+test_file[0])    # spk2utt
     clear_file_content(socean_dst_path+test_file[1])    # text
     clear_file_content(socean_dst_path+test_file[2])    # utt2spk
@@ -287,7 +305,7 @@ def reflush():
             # 將檔案B的內容寫入檔案A
             file_a.write(content_b)
     except:
-        # print("no replace text-phone")
+        print("no replace text-phone")
         pass
 
-    # print("reflush OK")
+    print("reflush OK")
