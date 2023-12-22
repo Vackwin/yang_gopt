@@ -18,3 +18,5 @@ src/temp/*
 models/baseline.py
 figure/*
 !figure/gopt_poster.png
+*.pyc
+*.log

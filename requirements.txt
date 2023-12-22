@@ -5,3 +5,6 @@ numpy
 pydub
 alive-progress
 imbalanced-learn
+tqdm
+gradio
+motor
