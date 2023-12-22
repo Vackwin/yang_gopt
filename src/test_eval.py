@@ -33,4 +33,9 @@ def gopt_score(voice, text):
     return ret
 
 # gopt_score("../eval_example/test/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())
-gopt_score("../wav_dir/test/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())
+# gopt_score("../wav_dir/test/112020303011_10013.wav" ,"for another lining up this way helps them stay together".upper())
+def main():
+    gopt_score("/home/yu_hsiu/mongodb_capt_logs/download_wavs/8500270.wav" ,"how many rulers 4 rulers".upper())
+
+if __name__ == "__main__":
+    main()

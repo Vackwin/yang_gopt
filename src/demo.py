@@ -70,7 +70,8 @@ def gopt_score(text, audio):
 auth_token = os.getenv("auth_token")
 
 def find_speaker(file_id):
-    filename = "/data/master/yangming3/gopt/src/speechocean762/train/utt2spk"
+    # filename = "/data/master/yangming3/gopt/src/speechocean762/train/utt2spk"
+    filename = "/home/yu_hsiu/forked/yang_gopt/kaldi/egs/gop_speechocean762/s5/data/train/utt2spk"
     try:
         with open(filename, 'r') as file:
             lines = file.readlines()
@@ -85,12 +86,12 @@ def find_speaker(file_id):
 
 example_list = []
 
-example_list.append(["for another lining up this way helps them stay together", f"/data/master/yangming3/gopt/lttc_dir/112020303011/112020303011_10013.wav"])
-example_list.append(["today such equipment is no longer in use", f"/data/master/yangming3/gopt/lttc_dir/112020303011/112020303011_1002.wav"])
+# example_list.append(["for another lining up this way helps them stay together", f"/data/master/yangming3/gopt/lttc_dir/112020303011/112020303011_10013.wav"])
+# example_list.append(["today such equipment is no longer in use", f"/data/master/yangming3/gopt/lttc_dir/112020303011/112020303011_1002.wav"])
 for i in range(30):
     text, file_id = play.choose_text()
     speaker_id = find_speaker(file_id)
-    example_list.append([text.lower(), f"/data/master/yangming3/gopt/src/speechocean762/WAVE/SPEAKER{speaker_id}/{file_id}.WAV"])
+    example_list.append([text.lower(), f"/home/yu_hsiu/forked/yang_gopt/kaldi/egs/gop_speechocean762/s5/data/speechocean762/WAVE/SPEAKER{speaker_id}/{file_id}.WAV"])
 text = example_list[-1][0]
 
 mydescription = f"""
@@ -103,7 +104,7 @@ inputs = [
     gr.Textbox(
         value=example_list[-1][0], 
         label="Prompt Text"),
-    gr.Audio(source="microphone", type="filepath", label="Input File"),
+    gr.Audio(sources="microphone", type="filepath", label="Input File"),
 ]
 
 output = gr.HighlightedText(label="Score",

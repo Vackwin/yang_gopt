@@ -194,7 +194,7 @@ def write_text(filename, text):
         return "error"
 
 def choose_text():
-    speechOcean = "speechocean762/train/"
+    speechOcean = "/home/yu_hsiu/forked/yang_gopt/kaldi/egs/gop_speechocean762/s5/data/train/"
     file = "text"
     text = read_random_line(speechOcean + file)
     if text is None:
@@ -211,6 +211,7 @@ def convert_phone(text, id):
     for index, word in enumerate(words):
         phones, len_phn = find_phone(word)
         if len_phn == 0:
+            print(word)
             print(phones)
             return "error", [0]
         words_len_phn.append(len_phn)

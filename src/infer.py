@@ -38,6 +38,7 @@ def infer(audio, text, id, gop, phone_gop):
     check, list_len_phn = play.prepare_gop(audio, text)
     if check != "OK":
         print("\033[91m!!!!gop error!!!!!\033[0m")
+        print(check)
         return "bugs"
     utter, w_acc, w_st, w_total, phn = play.run_gopt(list_len_phn)
     if utter == 0:
@@ -98,12 +99,18 @@ def main(filename, wav_path):
             text = take_off(row['sentence'])
             wav_file_name = row['audio_url'][40:]
 
-            run_wget(wav_path, row['audio_url'])
-
-            print(row['id'], text)
+            # run_wget(wav_path, row['audio_url'])
+            downloaded_wav_path = '/home/yu_hsiu/gopt/src/prepare_kaldi_format_data/capt_gt80/WAVE/'
+            ind = 100 - i
+            audio = f"{downloaded_wav_path}{ind:04d}/{row['id']}.wav"
+            print(i, row['id'], text)
             # print(text, wav_path + wav_file_name)
-            list_of_numbers = [float(num) for num in row['phone_gop'].strip('[]').split(', ')]
-            ret = infer(wav_path + wav_file_name, text, row['id'], row['gop'], list_of_numbers)
+            a = (row['phone_gop'].strip('[]')).split('),')
+            list_of_numbers = [float(el.split(', ')[1].strip(')')) for el in a]
+            
+            # list_of_numbers = [float(num) for num in row['phone_gop'].strip('[]').split(', ')]
+            # ret = infer(wav_path + wav_file_name, text, row['id'], row['gop'], list_of_numbers)
+            ret = infer(audio, text, row['id'], row['gop'], list_of_numbers)
             if ret == "bugs":
                 return 
 
@@ -149,4 +156,4 @@ if __name__ == "__main__":
         # 寫入第一列的欄位名稱
         writer.writeheader()
 
-    main('../data/wav/capt_logs_gt90_with_phone_gop.csv', "../data/wav/")
+    main('../data/capt_logs_gt90_with_phone_gop.csv', "../data/wav/")
