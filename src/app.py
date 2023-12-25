@@ -1,4 +1,3 @@
-# from query_db.config import *
 import asyncio
 from query_db.get_log_document import *
 import test_eval
@@ -8,7 +7,6 @@ import time
 import requests
 import os
 from fastapi import FastAPI
-from typing import Annotated
 import uvicorn
 import logging
 
@@ -64,6 +62,9 @@ def main(ids: List[int]):
     logger.info(documents)
     sum_score_by_dim = [0,0,0,0,0]
     returned_dict['avg'] = {}
+    if len(documents) == 0:
+        returned_dict['status'] = 'all ids error, maybe older than 3 months'
+        return returned_dict
     for document in documents:
         play.reflush()
         result_dict = json.loads(document["result"])
@@ -96,11 +97,14 @@ def main(ids: List[int]):
         if check != "OK":
             print("\033[91m!!!!gop error!!!!!\033[0m")
             print(check)
-            return "bugs"
+            returned_dict['status'] = 'get gop error'
+            return returned_dict
         utter, w_acc, w_st, w_total, phn = play.run_gopt(list_len_phn)
         if utter == 0:
             print("\033[91m!!!!infer error!!!!!\033[0m")
-            return "\033[91m!!!!error!!!!\033[0m"
+            # return "\033[91m!!!!error!!!!\033[0m"
+            returned_dict['status'] = 'run gopt error'
+            return returned_dict
         for i in range(5):
             dim_score = int(utter[i])
             sum_score_by_dim[i] += dim_score
@@ -108,6 +112,7 @@ def main(ids: List[int]):
         logger.info(returned_dict)
     for i in range(5):
         returned_dict['avg'][utt_dim[i]] = sum_score_by_dim[i]/len(returned_dict[utt_dim[i]])
+    returned_dict['status'] = 'ok'
     return returned_dict
 
     
