@@ -12,7 +12,7 @@ import logging
 
 app = FastAPI()
 
-GOPT_PATH = "/home/yu_hsiu/forked/yang_gopt/"
+GOPT_PATH = "/root/notebooks/yang_gopt/"
 log_dir = GOPT_PATH + "logs/"
 save_dir = GOPT_PATH + "wav_dir"
 for dir in log_dir, save_dir:
