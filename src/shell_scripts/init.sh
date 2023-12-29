@@ -6,10 +6,10 @@ cd yang_gopt/ || exit
 # cp src/ezai-lexicon.txt cmudict/new.txt
 # sed -i 's/\s/\t/' cmudict/new.txt
 # sed -i '/\tSPN\|\tSIL/d' cmudict/new.txt
-./dl_libri_model.sh
+./src/shell_scripts/dl_libri_model.sh
 cd kaldi/egs/gop_speechocean762/s5/ || exit
-cp ~/notebooks/first_run.sh .
-cp ~/notebooks/run.sh .
+cp ~/notebooks/yang_gopt/src/shell_scripts/first_run.sh .
+cp ~/notebooks/yang_gopt/src/shell_scripts/run.sh .
 chmod +x first_run.sh run.sh
 ./first_run.sh
 cd ~/notebooks/yang_gopt || exit
