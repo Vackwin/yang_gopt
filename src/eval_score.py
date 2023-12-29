@@ -3,6 +3,14 @@ import sys
 import os
 # sys.path.append(os.path.abspath('../src/'))
 import models
+from pynvml import *
+
+
+def print_gpu_utilization():
+    nvmlInit()
+    handle = nvmlDeviceGetHandleByIndex(0)
+    info = nvmlDeviceGetMemoryInfo(handle)
+    print(f"GPU memory occupied: {info.used//1024**2} MB.")
 
 def feature_normalize(input_feat):
     norm_mean, norm_std = 3.203, 4.045
@@ -60,6 +68,27 @@ def gopt_score(list_len_phn):
         # print(list_len_phn)
 
         return utter, w_acc, w_st, w_total, phn
+    
+def batch_gopt_score():
+    from eval_score import gopt
+
+    import numpy as np
+    input_feat = np.load("../data/seq_data_mydataset/te_feat.npy")
+    input_phn = np.load("../data/seq_data_mydataset/te_label_phn.npy")
+    gopt = gopt.float()
+    gopt.eval()
+    with torch.no_grad():
+        t_input_feat = torch.from_numpy(input_feat[:,:,:])
+        t_input_feat = feature_normalize(t_input_feat)
+        t_phn = torch.from_numpy(input_phn[:,:,0])
+        print_gpu_utilization()
+        u1, u2, u3, u4, u5, p, w1, w2, w3 = gopt(t_input_feat.float(),t_phn.float())
+        print_gpu_utilization()
+        
+        utter = torch.cat((u1,u2,u3,u4,u5), dim=1)
+        utt_avg = torch.mean(utter, dim=0)
+
+        return utter, utt_avg
 
 if __name__ == "__main__":
     gopt_score()

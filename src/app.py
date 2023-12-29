@@ -41,6 +41,7 @@ def set_query_by_id(ids):
 
 @app.post("/gopt")
 def main(ids: List[int]):
+    whole_start_time = time.time()
     query = set_query_by_id(ids)
     try:
         loop = asyncio.get_event_loop()
@@ -69,6 +70,9 @@ def main(ids: List[int]):
         play.reflush()
         result_dict = json.loads(document["result"])
         audio_url = document["audio_url"]
+        if audio_url is None:
+            logger.debug(document['id'], "audio_url is null")
+            continue
         skip_utt = False
         ## get word prompt after nltk
         prompt_list = []
@@ -83,7 +87,7 @@ def main(ids: List[int]):
             file.write(response.content)
 
         check, list_len_phn = play.prepare_gop(save_path, text)
-        print("list_len_phn: ",list_len_phn)
+        logger.debug(f"list_len_phn: {list_len_phn}")
         num_phns = 0
         for word_len in list_len_phn:
             num_phns += word_len
@@ -91,7 +95,7 @@ def main(ids: List[int]):
                 skip_utt = True
                 break
         if skip_utt:
-            print("Sentence too long. Not running gopt.")
+            logger.debug(f"{document['id']}, Sentence too long. Not running gopt.")
             continue
 
         if check != "OK":
@@ -109,10 +113,86 @@ def main(ids: List[int]):
             dim_score = int(utter[i])
             sum_score_by_dim[i] += dim_score
             returned_dict[utt_dim[i]].append(dim_score)
-        logger.info(returned_dict)
     for i in range(5):
         returned_dict['avg'][utt_dim[i]] = sum_score_by_dim[i]/len(returned_dict[utt_dim[i]])
     returned_dict['status'] = 'ok'
+    logger.debug(returned_dict)
+    whole_end_time = time.time()
+    logger.info(f"whole time: {whole_end_time - whole_start_time}")
+    return returned_dict
+
+@app.post("/batch_gopt")
+def batch_main(ids: List[int]):
+    whole_start_time = time.time()
+    query = set_query_by_id(ids)
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError as e:
+        if str(e).startswith('There is no current event loop in thread'):
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        else:
+            raise
+    task = loop.create_task(query_capt_logs(query))
+    loop.run_until_complete(task)
+    documents= task.result()
+    utt_dim = ["acc","com","flu","pro","tot"]
+    returned_dict = {}
+    for el in utt_dim:
+        returned_dict[el] = []
+
+    logger = logging.getLogger("")
+    logger.debug(documents)
+    returned_dict['avg'] = {}
+    play.batch_reflush()
+    fetched_num = len(documents)
+    # gop_start_time = time.time()
+    for ind, document in enumerate(documents):
+        result_dict = json.loads(document["result"])
+        audio_url = document["audio_url"]
+        if audio_url is None:
+            logger.debug(document['id'], "audio_url is null")
+            continue
+        ## get word prompt after nltk
+        prompt_list = []
+        for word_result in result_dict["hyp"]:
+            word = word_result["input_word"].upper()
+            prompt_list.append(word)
+        text = " ".join(prompt_list)
+        response = requests.get(audio_url)
+        response.raise_for_status()
+        save_path = f"{save_dir}/{document['id']}.wav"
+        with open(save_path, "wb") as file:
+            file.write(response.content)
+
+        check, list_len_phn = play.batch_prepare_gop(save_path, text, ind)
+        logger.debug(f"{document['id']}: list_len_phn: {list_len_phn}")
+
+        if check != "OK":
+            print("\033[91m!!!!gop error!!!!!\033[0m")
+            returned_dict['status'] = 'get gop error'
+            return returned_dict
+            # return "bugs"
+    # gop_end_time = time.time()
+    # logger.info(f"gop time:  {gop_end_time - gop_start_time}")
+    # gopt_start_time = time.time()
+    check, ret = play.batch_run_gopt()
+    # gopt_end_time = time.time()
+    # logger.info(f"gopt time: {gopt_end_time - gopt_start_time}")
+    logger.debug('ret:')
+    logger.debug(ret)
+    if check == 0:
+        print("\033[91m!!!!infer error!!!!!\033[0m")
+        returned_dict['status'] = 'run gopt error'
+        return returned_dict
+    returned_dict['avg'] = dict(zip(utt_dim, ret[1].tolist()))
+    for i in range(ret[0].shape[0]):
+        for j, el in enumerate(utt_dim):
+            returned_dict[el].append(ret[0][i][j].tolist())
+    whole_end_time = time.time()
+    logger.info(f"whole time: {whole_end_time - whole_start_time}")
+    returned_dict['status'] = 'ok'
+    
     return returned_dict
 
     

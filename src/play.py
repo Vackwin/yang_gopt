@@ -1,9 +1,13 @@
 import subprocess
 import random
+import time
 import eval_score
 import os
 from pydub import AudioSegment
 from alive_progress import alive_bar
+import logging
+
+logger = logging.getLogger("")
 
 
 def clear_file_content(file_path):
@@ -142,8 +146,6 @@ def find_phone(word):
         return pronunciation, len
     elif word in lexicon2:
         pronunciation = lexicon2[word]
-        print("word in lexicon2")
-        print(word,":", pronunciation)
         write_new_lexicon(word, pronunciation)
         pronunciation, len = process_phone(pronunciation)
         return pronunciation, len
@@ -231,7 +233,10 @@ def resampleAndSave(wav, new_sample_rate, path_name):
 def run_gopt(list_len_phn):
     with alive_bar(len(range(4))) as bar:
         bar()  # 顯示進度
+        kaldi_start_time = time.time()
         ret = run_script("../kaldi/egs/gop_speechocean762/s5/", "run.sh")
+        kaldi_end_time = time.time()
+        logger.debug(f"kaldi time: {kaldi_end_time - kaldi_start_time}")
         if ret != 0:
             print("run.sh error")
             return 0, 0, 0, 0, 0
@@ -245,7 +250,10 @@ def run_gopt(list_len_phn):
         run_python("prep_data/", "gen_seq_data_phn_demo.py")
         print("gen seq data ok")
         bar()  # 顯示進度
+        gopt_start_time = time.time()
         ret = eval_score.gopt_score(list_len_phn)
+        gopt_end_time = time.time()
+        logger.debug(f"gopt time: {gopt_end_time - gopt_start_time}")
         return ret
 
 def prepare_gop(audio, text):
@@ -289,6 +297,103 @@ def reflush():
     wave_file = f"WAVE/SPEAKER{spk}/{voice_name}.wav"
 
     del_file(socean_dst_path+wave_file)
+    del_file("../kaldi/egs/gop_speechocean762/s5/data/test")
+    # del_file("../kaldi/egs/gop_speechocean762/s5/data/local")
+    # del_file("../kaldi/egs/gop_speechocean762/s5/data/lang_nosp")
+    del_file(socean_dst_path+"test/spk2age")
+    del_file(socean_dst_path+"test/spk2gender")
+    clear_file_content(socean_dst_path+test_file[0])    # spk2utt
+    clear_file_content(socean_dst_path+test_file[1])    # text
+    clear_file_content(socean_dst_path+test_file[2])    # utt2spk
+    clear_file_content(socean_dst_path+test_file[3])    # wav.scp   
+    try: 
+        with open(socean_dst_path+resource_file, 'w') as file_a, open(socean_dst_path+resource_file+"a", 'r') as file_b:
+            # 讀取檔案B的內容
+            content_b = file_b.read()
+            
+            # 將檔案B的內容寫入檔案A
+            file_a.write(content_b)
+    except:
+        print("no replace text-phone")
+        pass
+
+    print("reflush OK")
+
+def batch_run_gopt():
+    with alive_bar(len(range(4))) as bar:
+        write_text("../kaldi/egs/gop_speechocean762/s5/data/speechocean762/test/spk2utt", f"\n")
+        bar()  # 顯示進度
+        kaldi_start_time = time.time()
+        ret = run_script("../kaldi/egs/gop_speechocean762/s5/", "run.sh")
+        kaldi_end_time = time.time()
+        logger.debug(f"kaldi time: {kaldi_end_time - kaldi_start_time}")
+        if ret != 0:
+            print("run.sh error")
+            return 0, 0
+        bar()  # 顯示進度
+        os.environ['KALDI_ROOT']='/home/yu_hsiu/kaldi'
+        run_python("../kaldi/egs/gop_speechocean762/s5/", "local/extract_gop_feats.py")
+        print("extract gop ok")
+        cp_file("../kaldi/egs/gop_speechocean762/s5/gopt_feats/", "../data/raw_kaldi_gop/mydataset/")
+        print("cp ok")
+        bar()  # 顯示進度
+        run_python("prep_data/", "gen_seq_data_phn_demo.py")
+        print("gen seq data ok")
+        bar()  # 顯示進度
+        gopt_start_time = time.time()
+        ret = eval_score.batch_gopt_score()
+        gopt_end_time = time.time()
+        logger.debug(f"gopt time: {gopt_end_time - gopt_start_time}")
+        return 1, ret
+
+def batch_prepare_gop(audio, text, id):
+    spk = "9999"
+    voice_name = f"0{spk}{id:04d}"
+
+    socean_dst_path = "../kaldi/egs/gop_speechocean762/s5/data/speechocean762/"
+    resource_file = "resource/text-phone"
+    test_file = ["test/spk2utt", "test/text", "test/utt2spk", "test/wav.scp"]
+    wave_file = f"WAVE/SPEAKER{spk}/{voice_name}.wav"
+    SAMPLE_RATE = 16000
+
+    if not os.path.isdir(os.path.dirname(socean_dst_path+wave_file)):
+        os.makedirs(os.path.dirname(socean_dst_path+wave_file))
+    if not os.path.isdir(os.path.dirname(socean_dst_path+test_file[0])):
+        os.makedirs(os.path.dirname(socean_dst_path+test_file[0]))
+
+    a_list_of_text_phone, list_len_phn = convert_phone(text.upper(), voice_name)
+    if a_list_of_text_phone == "error":
+        return "convert phone error", [0]
+    num_phns = 0
+    for word_len in list_len_phn:
+            num_phns += word_len
+            if num_phns >= 60:
+                return "sentence too long", [0]
+    resampleAndSave(audio, SAMPLE_RATE, socean_dst_path+wave_file)
+    if read_random_line(socean_dst_path+test_file[0]) == None:
+        write_text(socean_dst_path+test_file[0], f"{spk} {voice_name}")             # spk2utt
+    else:
+        write_text(socean_dst_path+test_file[0], f" {voice_name}")
+    write_text(socean_dst_path+test_file[1], f"{voice_name} {text.upper()}\n")    # text
+    write_text(socean_dst_path+test_file[2], f"{voice_name} {spk}\n")             # utt2spk
+    write_text(socean_dst_path+test_file[3], f"{voice_name} {wave_file}\n")       # wav.scp
+
+    cp_file(socean_dst_path+resource_file, socean_dst_path+resource_file+"a")
+
+    ret = write_text(socean_dst_path+resource_file, f"{a_list_of_text_phone}")      # text-phone
+    if ret == "error":
+        return "write_text text-phone error", [0]
+    return "OK", list_len_phn
+
+def batch_reflush():
+    spk = "9999"
+
+    socean_dst_path = "../kaldi/egs/gop_speechocean762/s5/data/speechocean762/"
+    resource_file = "resource/text-phone"
+    test_file = ["test/spk2utt", "test/text", "test/utt2spk", "test/wav.scp"]
+    wave_dir = f"WAVE/SPEAKER{spk}/"
+
+    del_file(socean_dst_path+wave_dir)
     del_file("../kaldi/egs/gop_speechocean762/s5/data/test")
     # del_file("../kaldi/egs/gop_speechocean762/s5/data/local")
     # del_file("../kaldi/egs/gop_speechocean762/s5/data/lang_nosp")
