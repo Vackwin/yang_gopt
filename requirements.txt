@@ -8,3 +8,4 @@ imbalanced-learn
 tqdm
 gradio
 motor
+pynvml

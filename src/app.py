@@ -63,9 +63,7 @@ def main(ids: List[int]):
     logger.info(documents)
     sum_score_by_dim = [0,0,0,0,0]
     returned_dict['avg'] = {}
-    if len(documents) == 0:
-        returned_dict['status'] = 'all ids error, maybe older than 3 months'
-        return returned_dict
+    valid_log_num = 0
     for document in documents:
         play.reflush()
         result_dict = json.loads(document["result"])
@@ -113,6 +111,9 @@ def main(ids: List[int]):
             dim_score = int(utter[i])
             sum_score_by_dim[i] += dim_score
             returned_dict[utt_dim[i]].append(dim_score)
+    if valid_log_num == 0:
+        returned_dict['status'] = 'no valid documents'
+        return returned_dict
     for i in range(5):
         returned_dict['avg'][utt_dim[i]] = sum_score_by_dim[i]/len(returned_dict[utt_dim[i]])
     returned_dict['status'] = 'ok'
@@ -145,7 +146,7 @@ def batch_main(ids: List[int]):
     logger.debug(documents)
     returned_dict['avg'] = {}
     play.batch_reflush()
-    fetched_num = len(documents)
+    valid_log_num = 0
     # gop_start_time = time.time()
     for ind, document in enumerate(documents):
         result_dict = json.loads(document["result"])
@@ -170,12 +171,13 @@ def batch_main(ids: List[int]):
 
         if check != "OK":
             print("\033[91m!!!!gop error!!!!!\033[0m")
-            returned_dict['status'] = 'get gop error'
-            return returned_dict
+            returned_dict['status'] = 'some utts get gop error'
+        else:
+            valid_log_num += 1
             # return "bugs"
-    # gop_end_time = time.time()
-    # logger.info(f"gop time:  {gop_end_time - gop_start_time}")
-    # gopt_start_time = time.time()
+    if valid_log_num == 0:
+        returned_dict['status'] = 'no valid documents'
+        return returned_dict
     check, ret = play.batch_run_gopt()
     # gopt_end_time = time.time()
     # logger.info(f"gopt time: {gopt_end_time - gopt_start_time}")
@@ -191,7 +193,8 @@ def batch_main(ids: List[int]):
             returned_dict[el].append(ret[0][i][j].tolist())
     whole_end_time = time.time()
     logger.info(f"whole time: {whole_end_time - whole_start_time}")
-    returned_dict['status'] = 'ok'
+    if 'status' not in returned_dict:
+        returned_dict['status'] = 'ok'
     
     return returned_dict
 
