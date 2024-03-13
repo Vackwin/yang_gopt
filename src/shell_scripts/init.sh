@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# git clone https://github.com/Vackwin/yang_gopt.git
+KALDI_PATH=/opt/kaldi/
+LEXICON_TXT=src/ezai-lexicon.txt
+
+git clone https://github.com/Vackwin/yang_gopt.git
 cd yang_gopt/ || exit
-# ln -sf /opt/kaldi/ kaldi
-# cp src/ezai-lexicon.txt cmudict/new.txt
-# sed -i 's/\s/\t/' cmudict/new.txt
-# sed -i '/\tSPN\|\tSIL/d' cmudict/new.txt
+ln -sf /opt/kaldi/ kaldi
+cp src/ezai-lexicon.txt cmudict/new.txt
+sed -i 's/\s/\t/' cmudict/new.txt
+sed -i '/\tSPN\|\tSIL/d' cmudict/new.txt
 ./src/shell_scripts/dl_libri_model.sh
 cd kaldi/egs/gop_speechocean762/s5/ || exit
 cp ~/notebooks/yang_gopt/src/shell_scripts/first_run.sh .

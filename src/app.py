@@ -40,20 +40,10 @@ def set_query_by_id(ids):
     return query
 
 @app.post("/gopt")
-def main(ids: List[int]):
+async def main(ids: List[int]):
     whole_start_time = time.time()
     query = set_query_by_id(ids)
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError as e:
-        if str(e).startswith('There is no current event loop in thread'):
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        else:
-            raise
-    task = loop.create_task(query_capt_logs(query))
-    loop.run_until_complete(task)
-    documents= task.result()
+    documents = await(query_capt_logs(query))
     utt_dim = ["acc","com","flu","pro","tot"]
     returned_dict = {}
     for el in utt_dim:
@@ -101,6 +91,7 @@ def main(ids: List[int]):
             print(check)
             returned_dict['status'] = 'get gop error'
             return returned_dict
+        valid_log_num += 1
         utter, w_acc, w_st, w_total, phn = play.run_gopt(list_len_phn)
         if utter == 0:
             print("\033[91m!!!!infer error!!!!!\033[0m")
@@ -123,20 +114,10 @@ def main(ids: List[int]):
     return returned_dict
 
 @app.post("/batch_gopt")
-def batch_main(ids: List[int]):
+async def batch_main(ids: List[int]):
     whole_start_time = time.time()
     query = set_query_by_id(ids)
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError as e:
-        if str(e).startswith('There is no current event loop in thread'):
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-        else:
-            raise
-    task = loop.create_task(query_capt_logs(query))
-    loop.run_until_complete(task)
-    documents= task.result()
+    documents = await(query_capt_logs(query))
     utt_dim = ["acc","com","flu","pro","tot"]
     returned_dict = {}
     for el in utt_dim:
