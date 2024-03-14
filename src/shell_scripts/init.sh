@@ -5,8 +5,8 @@ LEXICON_TXT=src/ezai-lexicon.txt
 
 git clone https://github.com/Vackwin/yang_gopt.git
 cd yang_gopt/ || exit
-ln -sf /opt/kaldi/ kaldi
-cp src/ezai-lexicon.txt cmudict/new.txt
+ln -sf $KALDI_PATH kaldi
+cp $LEXICON_TXT cmudict/new.txt
 sed -i 's/\s/\t/' cmudict/new.txt
 sed -i '/\tSPN\|\tSIL/d' cmudict/new.txt
 ./src/shell_scripts/dl_libri_model.sh

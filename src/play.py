@@ -241,7 +241,6 @@ def run_gopt(list_len_phn):
             print("run.sh error")
             return 0, 0, 0, 0, 0
         bar()  # 顯示進度
-        os.environ['KALDI_ROOT']='/home/yu_hsiu/kaldi'
         run_python("../kaldi/egs/gop_speechocean762/s5/", "local/extract_gop_feats.py")
         print("extract gop ok")
         cp_file("../kaldi/egs/gop_speechocean762/s5/gopt_feats/", "../data/raw_kaldi_gop/mydataset/")
@@ -331,7 +330,6 @@ def batch_run_gopt():
             print("run.sh error")
             return 0, 0
         bar()  # 顯示進度
-        os.environ['KALDI_ROOT']='/home/yu_hsiu/kaldi'
         run_python("../kaldi/egs/gop_speechocean762/s5/", "local/extract_gop_feats.py")
         print("extract gop ok")
         cp_file("../kaldi/egs/gop_speechocean762/s5/gopt_feats/", "../data/raw_kaldi_gop/mydataset/")
